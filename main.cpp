@@ -26,6 +26,7 @@
 #include <math.h>
 #include <memory>
 #include <AntTweakBar.h>
+//#include <Algorithm>
 
 #define WINDOW_TITLE "Volume renderer"
 
@@ -49,7 +50,7 @@ struct Globals {
     glm::fquat rotation;
     TwBar *bar;
     glm::vec4 backgroundColor;
-    int stepSize;
+    int steps;
 };
 
 Globals globals;
@@ -61,11 +62,11 @@ void setUpAntTweakBar()
     TwDefine(" TweakBar size='500 850',GLOBAL fontsize=3"); // resize bar
 
     TwAddVarRW(globals.bar, "Orientation", TW_TYPE_QUAT4F, &globals.rotation, "opened=true readonly=true");
-    TwAddVarRW(globals.bar, "Step Size", TW_TYPE_INT32, &globals.stepSize, " step=5.0, keydecr='[', keyincr=']'");
+    TwAddVarRW(globals.bar, "Step Size", TW_TYPE_INT32, &globals.steps, " step=5.0, keydecr='[', keyincr=']'");
 }
 
 void initializeGlobals(){
-    globals.stepSize = 10;
+    globals.steps = 10;
 }
 
 // Returns the value of the environment variable whose name is
@@ -253,10 +254,10 @@ void setUpTrackball(void)
 
 void init(void)
 {
-    glClearColor(0.3, 0.3, 0.3, 0.0);
+    glClearColor(0.0, 0.0, 0.0, 0.0);
 
     // Load volume data
-    globals.volume = loadVolume(dataDir() + "foot.vtk");
+    globals.volume = loadVolume(dataDir() + "abdomen.vtk");
 
     // Create volume texture
     globals.volumeTexture = createVolumeTexture(globals.volume);
@@ -390,7 +391,7 @@ void renderVolume(cgtk::GLSLProgram &program, const GLuint quadVBO,
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_3D, volumeTexture);
     
-    program.setUniform1i("u_stepSize", globals.stepSize);
+    program.setUniform1i("u_steps", globals.steps);
 
 
     float diffuseIntensity = 0.50;
@@ -455,6 +456,7 @@ void display(void)
     // via the frontFaceFBO
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+
     glCullFace(GL_BACK);
     globals.frontFaceFBO.bind();
     globals.frontFaceFBO.clear();
@@ -472,11 +474,14 @@ void display(void)
     globals.backFaceFBO.clear();
     drawBoundingGeometry(globals.boundingGeometryProgram, globals.cubeVBO);
     globals.backFaceFBO.unbind();
+
     glDisable(GL_CULL_FACE);
     // ...
 
     // Perform ray-casting
     // ...
+    glEnable (GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     renderVolume(globals.rayCastingProgram, globals.quadVBO,
                   globals.frontFaceFBO.getTexture(GL_COLOR_ATTACHMENT0)->getHandle(),
                   globals.backFaceFBO.getTexture(GL_COLOR_ATTACHMENT0)->getHandle(),
