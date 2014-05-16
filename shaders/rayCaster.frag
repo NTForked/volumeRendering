@@ -19,8 +19,8 @@ void main()
     vec2 tex = 0.5 * quadTex + 0.5;
 
     vec4 color;
-    vec4 startingPoint = fromColor(texture(u_frontFaceTexture,tex));
-    vec4 endingPoint = fromColor(texture(u_backFaceTexture,tex));
+    vec4 startingPoint = texture(u_frontFaceTexture,tex);
+    vec4 endingPoint = texture(u_backFaceTexture,tex);
     vec4 rayDirection = endingPoint - startingPoint;
     vec4 ray = startingPoint;
     float numSteps = 10;
@@ -32,13 +32,15 @@ void main()
     vec4 maximumColor = vec4(0.0,0.0,0.0,0.0);
 
     /*divide ray direction*/
+    /*radiation attenuation*/
+    /*houns field*/
 
     vec4 stepSize = rayDirection / numSteps; 
 
     for(int i = 0; i < numSteps; i++){
-        ray = ray + (rayDirection * stepSize);
+        ray = ray + stepSize;
         currentColor = texture(u_volumeTexture, ray.xyz);
-        currentIntensity = currentColor.r + currentColor.g + currentColor.b;
+        currentIntensity = currentColor.r;
 
         if(maximumIntensity < currentIntensity){
             maximumIntensity = currentIntensity;

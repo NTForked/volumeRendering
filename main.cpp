@@ -48,6 +48,7 @@ struct Globals {
     cgtk::Camera camera;
     glm::fquat rotation;
     TwBar *bar;
+    glm::vec4 backgroundColor;
 };
 
 Globals globals;
@@ -241,6 +242,7 @@ void setUpAntTweakBar()
     TwDefine(" TweakBar size='500 850',GLOBAL fontsize=3"); // resize bar
 
     TwAddVarRW(globals.bar, "Orientation", TW_TYPE_QUAT4F, &globals.rotation, "opened=true readonly=true");
+    TwAddVarRW(globals.bar, "Background Color", TW_TYPE_COLOR3F, &globals.backgroundColor[0], "colormode=rgb");
 }
 
 void init(void)
@@ -248,7 +250,7 @@ void init(void)
     glClearColor(0.3, 0.3, 0.3, 0.0);
 
     // Load volume data
-    globals.volume = loadVolume(dataDir() + "bonsai.vtk");
+    globals.volume = loadVolume(dataDir() + "foot.vtk");
 
     // Create volume texture
     globals.volumeTexture = createVolumeTexture(globals.volume);
@@ -336,10 +338,10 @@ void drawBoundingGeometry(cgtk::GLSLProgram &program, const GLuint cubeVBO)
 {
     program.enable();
 
+    glClearColor(globals.backgroundColor.x,globals.backgroundColor.y,globals.backgroundColor.z, 1.0);    
+
     glm::mat4 model = globals.volume->getModelMatrix();
     model = globals.trackball.getRotationMatrix() * model;
-    //double elapsed_time = double(glutGet(GLUT_ELAPSED_TIME)) / 150.0;
-    //model = glm::rotate(model, (float) elapsed_time, glm::vec3(0.0,1.0,0.0));
 
     // AntTweakBar
     globals.rotation = glm::quat_cast(globals.trackball.getRotationMatrix());
@@ -367,6 +369,7 @@ void renderVolume(cgtk::GLSLProgram &program, const GLuint quadVBO,
                   const GLuint volumeTexture)
 {
     program.enable();
+
 
     // Set uniforms and bind textures here
 
@@ -439,7 +442,6 @@ void blit(cgtk::GLSLProgram &program, const GLuint quadVBO, const GLuint texture
 // MODIFY THIS FUNCTION
 void display(void)
 {
-    glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Render the front faces of the volume bounding box to a texture
