@@ -159,7 +159,7 @@ GLuint createQuadVBO()
 
 // Returns the ID of a VBO holding a 2-unit cube centered at origin
 GLuint createCubeVBO(void)
-{  
+{
     const GLfloat vertices[] = {
         // back
          1.0f, -1.0f, -1.0f,
@@ -220,7 +220,7 @@ void setUpCamera(void)
     globals.camera.setAspectRatio((float)globals.width / (float)globals.height);
     globals.camera.setZNear(1.0f);
     globals.camera.setZFar(1000.0f);
-  
+
     globals.camera.setEye(glm::vec3(0.0f, 0.0f, 400.0f));
     globals.camera.setCenter(glm::vec3(0.0f, 0.0f, 0.0f));
     globals.camera.setUp(glm::vec3(0.0f, 1.0f, 0.0f));
@@ -242,13 +242,13 @@ void setUpAntTweakBar()
 
     TwAddVarRW(globals.bar, "Orientation", TW_TYPE_QUAT4F, &globals.rotation, "opened=true readonly=true");
 }
- 
+
 void init(void)
 {
     glClearColor(0.3, 0.3, 0.3, 0.0);
 
     // Load volume data
-    globals.volume = loadVolume(dataDir() + "foot.vtk");
+    globals.volume = loadVolume(dataDir() + "bonsai.vtk");
 
     // Create volume texture
     globals.volumeTexture = createVolumeTexture(globals.volume);
@@ -338,6 +338,8 @@ void drawBoundingGeometry(cgtk::GLSLProgram &program, const GLuint cubeVBO)
 
     glm::mat4 model = globals.volume->getModelMatrix();
     model = globals.trackball.getRotationMatrix() * model;
+    //double elapsed_time = double(glutGet(GLUT_ELAPSED_TIME)) / 150.0;
+    //model = glm::rotate(model, (float) elapsed_time, glm::vec3(0.0,1.0,0.0));
 
     // AntTweakBar
     globals.rotation = glm::quat_cast(globals.trackball.getRotationMatrix());
@@ -372,15 +374,15 @@ void renderVolume(cgtk::GLSLProgram &program, const GLuint quadVBO,
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, frontFaceTexture);
 
-    program.setUniform1i("u_backFaceTexture", 0);
-    glActiveTexture(GL_TEXTURE0);
+    program.setUniform1i("u_backFaceTexture", 1);
+    glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, backFaceTexture);
 
-    program.setUniform1i("u_volumeTexture", 0);
-    glActiveTexture(GL_TEXTURE0);
+    program.setUniform1i("u_volumeTexture", 2);
+    glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_3D, volumeTexture);
 
-    
+
     float diffuseIntensity = 0.50;
     float ambientIntensity = 0.50;
     float specularPower = 60;
@@ -417,7 +419,7 @@ void renderVolume(cgtk::GLSLProgram &program, const GLuint quadVBO,
 // screen or some other render target
 void blit(cgtk::GLSLProgram &program, const GLuint quadVBO, const GLuint texture)
 {
-    
+
 
     program.setUniform1i("u_texture", 0);
 
@@ -454,7 +456,14 @@ void display(void)
     // Render the back faces of the volume bounding box to a texture
     // via the backFaceFBO
     // ...
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+    globals.backFaceFBO.bind();
+    globals.backFaceFBO.clear();
     drawBoundingGeometry(globals.boundingGeometryProgram, globals.cubeVBO);
+    globals.backFaceFBO.unbind();
+    glDisable(GL_CULL_FACE);
     // ...
 
     // Perform ray-casting
@@ -464,9 +473,12 @@ void display(void)
                   globals.backFaceFBO.getTexture(GL_COLOR_ATTACHMENT0)->getHandle(),
                   globals.volumeTexture->getHandle());
     // ...
-    
+
     // AntTweakDraw
     TwDraw();
+
+    //blit(globals.blitProgram, globals.quadVBO,
+         //globals.frontFaceFBO.getTexture(GL_COLOR_ATTACHMENT0)->getHandle());
 
     glutSwapBuffers();
 }

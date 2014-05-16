@@ -1,9 +1,7 @@
 #version 130
 
-in vec4 v_position;
-uniform sampler2D u_frontFaceTexture;
+in vec3 texCoord;
 
 void main() {
-    gl_FragColor = 0.5 * v_position + 0.5;
-    /*gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);*/
+    gl_FragColor = vec4(0.5 * texCoord + 0.5,1.0);
 }
