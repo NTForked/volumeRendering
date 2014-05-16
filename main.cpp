@@ -49,9 +49,24 @@ struct Globals {
     glm::fquat rotation;
     TwBar *bar;
     glm::vec4 backgroundColor;
+    int stepSize;
 };
 
 Globals globals;
+
+void setUpAntTweakBar()
+{
+    TwInit(TW_OPENGL, NULL);
+    globals.bar = TwNewBar("TweakBar");
+    TwDefine(" TweakBar size='500 850',GLOBAL fontsize=3"); // resize bar
+
+    TwAddVarRW(globals.bar, "Orientation", TW_TYPE_QUAT4F, &globals.rotation, "opened=true readonly=true");
+    TwAddVarRW(globals.bar, "Step Size", TW_TYPE_INT32, &globals.stepSize, " step=5.0, keydecr='[', keyincr=']'");
+}
+
+void initializeGlobals(){
+    globals.stepSize = 10;
+}
 
 // Returns the value of the environment variable whose name is
 // specified by the argument
@@ -235,15 +250,6 @@ void setUpTrackball(void)
     globals.trackball.setCenter(center);
 }
 
-void setUpAntTweakBar()
-{
-    TwInit(TW_OPENGL, NULL);
-    globals.bar = TwNewBar("TweakBar");
-    TwDefine(" TweakBar size='500 850',GLOBAL fontsize=3"); // resize bar
-
-    TwAddVarRW(globals.bar, "Orientation", TW_TYPE_QUAT4F, &globals.rotation, "opened=true readonly=true");
-    TwAddVarRW(globals.bar, "Background Color", TW_TYPE_COLOR3F, &globals.backgroundColor[0], "colormode=rgb");
-}
 
 void init(void)
 {
@@ -328,6 +334,7 @@ void init(void)
 
     // Set up the AntTweakBar
     setUpAntTweakBar();
+    initializeGlobals();
 }
 
 
@@ -337,8 +344,6 @@ void init(void)
 void drawBoundingGeometry(cgtk::GLSLProgram &program, const GLuint cubeVBO)
 {
     program.enable();
-
-    glClearColor(globals.backgroundColor.x,globals.backgroundColor.y,globals.backgroundColor.z, 1.0);    
 
     glm::mat4 model = globals.volume->getModelMatrix();
     model = globals.trackball.getRotationMatrix() * model;
@@ -384,6 +389,8 @@ void renderVolume(cgtk::GLSLProgram &program, const GLuint quadVBO,
     program.setUniform1i("u_volumeTexture", 2);
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_3D, volumeTexture);
+    
+    program.setUniform1i("u_stepSize", globals.stepSize);
 
 
     float diffuseIntensity = 0.50;

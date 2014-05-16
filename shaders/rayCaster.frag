@@ -3,6 +3,7 @@
 uniform sampler2D u_frontFaceTexture;
 uniform sampler2D u_backFaceTexture;
 uniform sampler3D u_volumeTexture;
+uniform int u_stepSize;
 
 in vec4 v_position;
 in vec2 quadTex;
@@ -23,7 +24,7 @@ void main()
     vec4 endingPoint = texture(u_backFaceTexture,tex);
     vec4 rayDirection = endingPoint - startingPoint;
     vec4 ray = startingPoint;
-    float numSteps = 10;
+    float numSteps = u_stepSize;
 
     float maximumIntensity = 0.0;
     float currentIntensity;
@@ -48,7 +49,6 @@ void main()
         }
     }
 
-    /*gl_FragColor = texture(u_backFaceTexture,tex);*/
     gl_FragColor = maximumColor;
 
 }
