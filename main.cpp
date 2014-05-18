@@ -76,14 +76,14 @@ void setUpAntTweakBar()
     TwAddVarRW(globals.bar, "Step Size", TW_TYPE_INT32, &globals.steps, "step=10,max=100 ");
 
     TwAddSeparator(globals.bar, NULL, NULL);
-    TwAddVarRW(globals.bar, "Transfer Color 1", TW_TYPE_COLOR4F, &globals.transferColor1[0], "colormode=rgb");
-    TwAddVarRW(globals.bar, "Transfer Point 1", TW_TYPE_FLOAT, &globals.transferPoint1, "step=0.1,max=1.0");
-    TwAddVarRW(globals.bar, "Transfer Color 2", TW_TYPE_COLOR4F, &globals.transferColor2[0], "colormode=rgb");
-    TwAddVarRW(globals.bar, "Transfer Point 2", TW_TYPE_FLOAT, &globals.transferPoint2, "step=0.1,max=1.0 ");
-    TwAddVarRW(globals.bar, "Transfer Color 3", TW_TYPE_COLOR4F, &globals.transferColor3[0], "colormode=rgb");
-    TwAddVarRW(globals.bar, "Transfer Point 3", TW_TYPE_FLOAT, &globals.transferPoint3, "step=0.1,max=1.0 ");
-    TwAddVarRW(globals.bar, "Transfer Color 4", TW_TYPE_COLOR4F, &globals.transferColor4[0], "colormode=rgb");
-    TwAddVarRW(globals.bar, "Transfer Point 4", TW_TYPE_FLOAT, &globals.transferPoint4, "step=0.1,max=1.0 ");
+    TwAddVarRW(globals.bar, "Transfer_Color_1", TW_TYPE_COLOR4F, &globals.transferColor1[0], "colormode=rgb");
+    TwAddVarRW(globals.bar, "Transfer_Point_1", TW_TYPE_FLOAT, &globals.transferPoint1, "step=0.1,max=1.0");
+    TwAddVarRW(globals.bar, "Transfer_Color_2", TW_TYPE_COLOR4F, &globals.transferColor2[0], "colormode=rgb");
+    TwAddVarRW(globals.bar, "Transfer_Point_2", TW_TYPE_FLOAT, &globals.transferPoint2, "step=0.1,max=1.0 ");
+    TwAddVarRW(globals.bar, "Transfer_Color_3", TW_TYPE_COLOR4F, &globals.transferColor3[0], "colormode=rgb");
+    TwAddVarRW(globals.bar, "Transfer_Point_3", TW_TYPE_FLOAT, &globals.transferPoint3, "step=0.1,max=1.0 ");
+    TwAddVarRW(globals.bar, "Transfer_Color_4", TW_TYPE_COLOR4F, &globals.transferColor4[0], "colormode=rgb");
+    TwAddVarRW(globals.bar, "Transfer_Point_4", TW_TYPE_FLOAT, &globals.transferPoint4, "step=0.1,max=1.0 ");
 
     TwAddSeparator(globals.bar, NULL, NULL);
     TwAddVarRW(globals.bar, "Background Color", TW_TYPE_COLOR4F, &globals.backgroundColor[0], "colormode=rgb");
@@ -122,10 +122,29 @@ void setUniformVariables(cgtk::GLSLProgram &program)
     program.setUniform1f("u_transferPoint4", globals.transferPoint4);
     program.setUniform1i("u_invert", globals.invert);
     program.setUniform1i("u_MIP", globals.MIP);
-    if(globals.MIP)
+    if(globals.MIP){
         TwDefine(" TweakBar/MIP_Color visible=true");
+        TwDefine(" TweakBar/Transfer_Point_1 visible=false");
+        TwDefine(" TweakBar/Transfer_Point_2 visible=false");
+        TwDefine(" TweakBar/Transfer_Point_3 visible=false");
+        TwDefine(" TweakBar/Transfer_Point_4 visible=false");
+        TwDefine(" TweakBar/Transfer_Color_1 visible=false");
+        TwDefine(" TweakBar/Transfer_Color_2 visible=false");
+        TwDefine(" TweakBar/Transfer_Color_3 visible=false");
+        TwDefine(" TweakBar/Transfer_Color_4 visible=false");
+    }
     else
+    {
         TwDefine(" TweakBar/MIP_Color visible=false");
+        TwDefine(" TweakBar/Transfer_Point_1 visible=true");
+        TwDefine(" TweakBar/Transfer_Point_2 visible=true");
+        TwDefine(" TweakBar/Transfer_Point_3 visible=true");
+        TwDefine(" TweakBar/Transfer_Point_4 visible=true");
+        TwDefine(" TweakBar/Transfer_Color_1 visible=true");
+        TwDefine(" TweakBar/Transfer_Color_2 visible=true");
+        TwDefine(" TweakBar/Transfer_Color_3 visible=true");
+        TwDefine(" TweakBar/Transfer_Color_4 visible=true");
+    }
 
     program.setUniform4f("u_MIP_Color", globals.mipColor);
 }
