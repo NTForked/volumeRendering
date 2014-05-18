@@ -49,8 +49,19 @@ struct Globals {
     cgtk::Camera camera;
     glm::fquat rotation;
     TwBar *bar;
-    glm::vec4 backgroundColor;
     int steps;
+    glm::vec4 transferColor1;
+    glm::vec4 transferColor2;
+    glm::vec4 transferColor3;
+    glm::vec4 transferColor4;
+    glm::vec4 backgroundColor;
+    glm::vec4 mipColor;
+    float transferPoint1;
+    float transferPoint2;
+    float transferPoint3;
+    float transferPoint4;
+    bool invert;
+    bool MIP;
 };
 
 Globals globals;
@@ -59,14 +70,64 @@ void setUpAntTweakBar()
 {
     TwInit(TW_OPENGL, NULL);
     globals.bar = TwNewBar("TweakBar");
-    TwDefine(" TweakBar size='500 850',GLOBAL fontsize=3"); // resize bar
+    TwDefine(" TweakBar size='200 450',GLOBAL fontsize=3"); // resize bar
 
     TwAddVarRW(globals.bar, "Orientation", TW_TYPE_QUAT4F, &globals.rotation, "opened=true readonly=true");
-    TwAddVarRW(globals.bar, "Step Size", TW_TYPE_INT32, &globals.steps, " step=5.0, keydecr='[', keyincr=']'");
+    TwAddVarRW(globals.bar, "Step Size", TW_TYPE_INT32, &globals.steps, "step=10,max=100 ");
+
+    TwAddSeparator(globals.bar, NULL, NULL);
+    TwAddVarRW(globals.bar, "Transfer Color 1", TW_TYPE_COLOR4F, &globals.transferColor1[0], "colormode=rgb");
+    TwAddVarRW(globals.bar, "Transfer Point 1", TW_TYPE_FLOAT, &globals.transferPoint1, "step=0.1,max=1.0");
+    TwAddVarRW(globals.bar, "Transfer Color 2", TW_TYPE_COLOR4F, &globals.transferColor2[0], "colormode=rgb");
+    TwAddVarRW(globals.bar, "Transfer Point 2", TW_TYPE_FLOAT, &globals.transferPoint2, "step=0.1,max=1.0 ");
+    TwAddVarRW(globals.bar, "Transfer Color 3", TW_TYPE_COLOR4F, &globals.transferColor3[0], "colormode=rgb");
+    TwAddVarRW(globals.bar, "Transfer Point 3", TW_TYPE_FLOAT, &globals.transferPoint3, "step=0.1,max=1.0 ");
+    TwAddVarRW(globals.bar, "Transfer Color 4", TW_TYPE_COLOR4F, &globals.transferColor4[0], "colormode=rgb");
+    TwAddVarRW(globals.bar, "Transfer Point 4", TW_TYPE_FLOAT, &globals.transferPoint4, "step=0.1,max=1.0 ");
+
+    TwAddSeparator(globals.bar, NULL, NULL);
+    TwAddVarRW(globals.bar, "Background Color", TW_TYPE_COLOR4F, &globals.backgroundColor[0], "colormode=rgb");
+
+    TwAddVarRW(globals.bar,"Invert", TW_TYPE_BOOLCPP, &globals.invert, "");
+    TwAddVarRW(globals.bar,"MIP", TW_TYPE_BOOLCPP, &globals.MIP, "");
+    TwAddVarRW(globals.bar, "MIP_Color", TW_TYPE_COLOR4F, &globals.mipColor[0], "colormode=rgb");
+    TwDefine(" TweakBar/MIP_Color visible=false");
+
 }
 
 void initializeGlobals(){
     globals.steps = 10;
+    globals.transferColor1 = glm::vec4(0.0,0.0,0.0,0.0);
+    globals.transferColor2 = glm::vec4(68.0/100.0,61.0/255.0,60.0/255.0,0.5);
+    globals.transferColor3 = glm::vec4(1.0,1.0,0.0,1.0);
+    globals.transferColor4 = glm::vec4(1.0,1.0,1.0,1.0);
+    globals.transferPoint1 = 0.077;
+    globals.transferPoint2 = 0.285;
+    globals.transferPoint3 = 0.685;
+    globals.transferPoint4 = 1.00;
+    globals.backgroundColor = glm::vec4(0.0,0.0,0.0,0.0);
+    globals.mipColor = glm::vec4(1.0,0.0,0.0,1.0);
+}
+
+void setUniformVariables(cgtk::GLSLProgram &program)
+{
+    program.setUniform1i("u_steps", globals.steps);
+    program.setUniform4f("u_transferColor1", globals.transferColor1);
+    program.setUniform4f("u_transferColor2", globals.transferColor2);
+    program.setUniform4f("u_transferColor3", globals.transferColor3);
+    program.setUniform4f("u_transferColor4", globals.transferColor4);
+    program.setUniform1f("u_transferPoint1", globals.transferPoint1);
+    program.setUniform1f("u_transferPoint2", globals.transferPoint2);
+    program.setUniform1f("u_transferPoint3", globals.transferPoint3);
+    program.setUniform1f("u_transferPoint4", globals.transferPoint4);
+    program.setUniform1i("u_invert", globals.invert);
+    program.setUniform1i("u_MIP", globals.MIP);
+    if(globals.MIP)
+        TwDefine(" TweakBar/MIP_Color visible=true");
+    else
+        TwDefine(" TweakBar/MIP_Color visible=false");
+
+    program.setUniform4f("u_MIP_Color", globals.mipColor);
 }
 
 // Returns the value of the environment variable whose name is
@@ -254,7 +315,10 @@ void setUpTrackball(void)
 
 void init(void)
 {
-    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClearColor(globals.backgroundColor.x,
+                 globals.backgroundColor.y,
+                 globals.backgroundColor.z, 
+                 globals.backgroundColor.a);
 
     // Load volume data
     globals.volume = loadVolume(dataDir() + "abdomen.vtk");
@@ -368,6 +432,7 @@ void drawBoundingGeometry(cgtk::GLSLProgram &program, const GLuint cubeVBO)
     program.disable();
 }
 
+
 // MODIFY THIS FUNCTION and the rayCaster.vert and rayCaster.frag to
 // perform ray-casting
 void renderVolume(cgtk::GLSLProgram &program, const GLuint quadVBO,
@@ -391,8 +456,7 @@ void renderVolume(cgtk::GLSLProgram &program, const GLuint quadVBO,
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_3D, volumeTexture);
     
-    program.setUniform1i("u_steps", globals.steps);
-
+    setUniformVariables(program);
 
     float diffuseIntensity = 0.50;
     float ambientIntensity = 0.50;
@@ -402,7 +466,6 @@ void renderVolume(cgtk::GLSLProgram &program, const GLuint quadVBO,
     glm::vec3 specularColor = glm::vec3(1.0,1.0,1.0);
     glm::vec3 ambientColor = glm::vec3(1.0,1.0,1.0);
     glm::vec3 lightColor = glm::vec3(1.0,1.0,1.0);
-    //glm::vec3 backgroundColor = glm::vec3(0.0,0.0,0.0);
     glm::vec3 lightPosition = glm::vec3(0.0,4.0,-1.0);
 
 
@@ -493,6 +556,12 @@ void display(void)
 
     //blit(globals.blitProgram, globals.quadVBO,
          //globals.frontFaceFBO.getTexture(GL_COLOR_ATTACHMENT0)->getHandle());
+
+    glClearColor(globals.backgroundColor.x,
+                 globals.backgroundColor.y,
+                 globals.backgroundColor.z, 
+                 globals.backgroundColor.a);
+    
 
     glutSwapBuffers();
 }
@@ -586,10 +655,12 @@ void idle(void)
 int main(int argc, char** argv)
 {
     glutInit(&argc, argv);
-    globals.width = 1680;
-    globals.height = 1050;
+    //globals.width = 1680;
+    //globals.height = 1050;
+    globals.width = 800;
+    globals.height = 600;
     glutInitWindowSize(globals.width, globals.height);
-    glutInitWindowPosition(0, 0);
+    glutInitWindowPosition(550, 250);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
     globals.windowID = glutCreateWindow(WINDOW_TITLE);
     initGLEW();
@@ -599,8 +670,6 @@ int main(int argc, char** argv)
     glutReshapeFunc(&reshape);
 
     // AntTweakBar
-    //glutMouseFunc((GLUTmousebuttonfun)TwEventMouseButtonGLUT);
-    //glutMotionFunc((GLUTmousemotionfun)TwEventMouseMotionGLUT);
     glutPassiveMotionFunc((GLUTmousemotionfun)TwEventMouseMotionGLUT); // same as MouseMotion
     glutKeyboardFunc((GLUTkeyboardfun)TwEventKeyboardGLUT);
     glutSpecialFunc((GLUTspecialfun)TwEventSpecialGLUT);
