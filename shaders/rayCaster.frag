@@ -31,11 +31,11 @@ vec4 mapToColor(float intensity)
     float transferPoint3 = u_transferPoint3;
     float transferPoint4 = u_transferPoint4;
 
-    if (intensity <= transferPoint1)
-    {
-        return transferColor1;
-    }
-    else if (intensity <= transferPoint2)
+    /*if (intensity <= transferPoint1)*/
+    /*{*/
+        /*return vec4(0.0,0.0,0.0,0.0);*/
+    /*}*/
+    if (intensity <= transferPoint2)
     {
         intensity = intensity / (transferPoint2 - transferPoint1);
         return mix(transferColor1,transferColor2,intensity);
@@ -50,10 +50,10 @@ vec4 mapToColor(float intensity)
         intensity = intensity / (transferPoint4 - transferPoint3);
         return mix(transferColor3,transferColor4,intensity);
     }
-    else
-    {
-        return transferColor4;
-    }
+    /*else*/
+    /*{*/
+        /*return transferColor4;*/
+    /*}*/
 }
 
 void main()
