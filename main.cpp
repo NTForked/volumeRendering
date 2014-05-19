@@ -336,7 +336,7 @@ void init(void)
                  globals.backgroundColor.a);
 
     // Load volume data
-    globals.volume = loadVolume(dataDir() + "foot_smoothed.vtk");
+    globals.volume = loadVolume(dataDir() + "bonsai.vtk");
 
     // Create volume texture
     globals.volumeTexture = createVolumeTexture(globals.volume);

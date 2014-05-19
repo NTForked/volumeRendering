@@ -31,10 +31,10 @@ vec4 mapToColor(float intensity)
     float transferPoint3 = u_transferPoint3;
     float transferPoint4 = u_transferPoint4;
 
-    /*if (intensity <= transferPoint1)*/
-    /*{*/
-        /*return vec4(0.0,0.0,0.0,0.0);*/
-    /*}*/
+    if (intensity <= transferPoint1)
+    {
+        return vec4(0.0,0.0,0.0,0.0);
+    }
     if (intensity <= transferPoint2)
     {
         intensity = intensity / (transferPoint2 - transferPoint1);
@@ -50,10 +50,6 @@ vec4 mapToColor(float intensity)
         intensity = intensity / (transferPoint4 - transferPoint3);
         return mix(transferColor3,transferColor4,intensity);
     }
-    /*else*/
-    /*{*/
-        /*return transferColor4;*/
-    /*}*/
 }
 
 void main()
@@ -65,33 +61,36 @@ void main()
     vec4 endingPoint = texture(u_backFaceTexture,tex);
     vec4 rayDirection = endingPoint - startingPoint;
     vec4 ray = startingPoint;
+
     float numSteps = u_steps;
     vec4 stepSize = rayDirection / numSteps; 
     float maximumIntensity = 0.0;
-    float currentIntensity;
-    vec4 currentColor;
-    vec4 maximumColor;
+    float currentIntensity = 0.0;
+    vec4 currentColor = vec4(0.0,0.0,0.0,0.0);
+    vec4 maximumColor = vec4(0.0,0.0,0.0,0.0);
     vec4 finalColor;
     float depth;
 
     float samples[1000];
     float depths[1000];
 
-
     for(int i = 0; i < numSteps; i++){
+
         ray = ray + stepSize;
         currentColor = texture(u_volumeTexture, ray.xyz);
+
         currentIntensity = currentColor.r;
         samples[i] = currentIntensity;
+
         depth = distance(ray.xyz, startingPoint.xyz) / distance(rayDirection.xyz, startingPoint.xyz);
         depths[i] = depth;
 
         if(maximumIntensity < currentIntensity){
             maximumIntensity = currentIntensity;
-            maximumColor = vec4(u_MIP_Color.xyz,depth);
+            maximumColor = vec4(u_MIP_Color.xyz,currentColor.r);
         }
+
     }
-    /*mix(one,second,alpha);*/
     
     vec4 mixedColor = vec4(0.0,0.0,0.0,0.0);
 
