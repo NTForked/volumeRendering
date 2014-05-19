@@ -1,8 +1,4 @@
 // Volume rendering project
-//
-// Modify this source file and the boundingGeometry and rayCaster
-// shaders to implement the volume renderer.
-//
 
 #include "GLSLProgram.h"
 #include "VTKReader.h"
@@ -340,7 +336,7 @@ void init(void)
                  globals.backgroundColor.a);
 
     // Load volume data
-    globals.volume = loadVolume(dataDir() + "abdomen.vtk");
+    globals.volume = loadVolume(dataDir() + "foot_smoothed.vtk");
 
     // Create volume texture
     globals.volumeTexture = createVolumeTexture(globals.volume);
@@ -477,26 +473,24 @@ void renderVolume(cgtk::GLSLProgram &program, const GLuint quadVBO,
     
     setUniformVariables(program);
 
-    float diffuseIntensity = 0.50;
-    float ambientIntensity = 0.50;
-    float specularPower = 60;
-    float specularIntensity = 0.05;
-    glm::vec3 diffuseColor = glm::vec3(1.0,1.0,1.0);
-    glm::vec3 specularColor = glm::vec3(1.0,1.0,1.0);
-    glm::vec3 ambientColor = glm::vec3(1.0,1.0,1.0);
-    glm::vec3 lightColor = glm::vec3(1.0,1.0,1.0);
-    glm::vec3 lightPosition = glm::vec3(0.0,4.0,-1.0);
-
-
-    program.setUniform3f("u_light_position",lightPosition);
-    program.setUniform3f("u_light_color",lightColor);
-    program.setUniform3f("K_a",glm::vec3(ambientIntensity,ambientIntensity,ambientIntensity));
-    program.setUniform3f("K_d",glm::vec3(diffuseIntensity,diffuseIntensity,diffuseIntensity));
-    program.setUniform3f("K_s",glm::vec3(specularIntensity,specularIntensity,specularIntensity));
-    program.setUniform3f("K_d_color",diffuseColor);
-    program.setUniform3f("K_a_color",ambientColor);
-    program.setUniform3f("K_s_color",specularColor);
-    program.setUniform1f("specular_power",specularPower);
+    //float diffuseIntensity = 0.50;
+    //float ambientIntensity = 0.50;
+    //float specularPower = 60;
+    //float specularIntensity = 0.05;
+    //glm::vec3 diffuseColor = glm::vec3(1.0,1.0,1.0);
+    //glm::vec3 specularColor = glm::vec3(1.0,1.0,1.0);
+    //glm::vec3 ambientColor = glm::vec3(1.0,1.0,1.0);
+    //glm::vec3 lightColor = glm::vec3(1.0,1.0,1.0);
+    //glm::vec3 lightPosition = glm::vec3(0.0,4.0,-1.0);
+    //program.setUniform3f("u_light_position",lightPosition);
+    //program.setUniform3f("u_light_color",lightColor);
+    //program.setUniform3f("K_a",glm::vec3(ambientIntensity,ambientIntensity,ambientIntensity));
+    //program.setUniform3f("K_d",glm::vec3(diffuseIntensity,diffuseIntensity,diffuseIntensity));
+    //program.setUniform3f("K_s",glm::vec3(specularIntensity,specularIntensity,specularIntensity));
+    //program.setUniform3f("K_d_color",diffuseColor);
+    //program.setUniform3f("K_a_color",ambientColor);
+    //program.setUniform3f("K_s_color",specularColor);
+    //program.setUniform1f("specular_power",specularPower);
 
     glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
     glEnableVertexAttribArray(program.getAttributeLocation("a_position"));
